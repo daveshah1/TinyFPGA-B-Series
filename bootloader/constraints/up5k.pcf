@@ -1,0 +1,9 @@
+set_io pin17_sdi 17
+set_io pin1_usb_dp 21
+set_io pin2_usb_dn 13
+set_io pin15_sck 15
+set_io pin14_sdo 14
+set_io pin16_ss 16
+set_io pin3_clk_12mhz 35
+set_io test 9
+set_io pu 12

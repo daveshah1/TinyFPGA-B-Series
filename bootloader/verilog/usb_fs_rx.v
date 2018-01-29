@@ -1,5 +1,5 @@
 module usb_fs_rx (
-  // A 48MHz clock is required to recover the clock from the incoming data. 
+  // A 48MHz clock is required to recover the clock from the incoming data.
   input clk_48mhz,
   input reset,
 
@@ -39,11 +39,11 @@ module usb_fs_rx (
   ////////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////
 
-  
+
   ////////////////////////////////////////////////////////////////////////////////
   // double flop for metastability
   /*
-    all asynchronous inputs into the RTL need to be double-flopped to protect 
+    all asynchronous inputs into the RTL need to be double-flopped to protect
     against metastable scenarios.  if the RTL clock samples an asynchronous signal
     at the same time the signal is transitioning the result is undefined.  flopping
     the signal twice ensures it will be either 1 or 0 and nothing in between.
@@ -61,9 +61,9 @@ module usb_fs_rx (
   /*
     the recieve path doesn't currently use a differential reciever.  because of
     this there is a chance that one of the differential pairs will appear to have
-    changed to the new state while the other is still in the old state.  the 
+    changed to the new state while the other is still in the old state.  the
     following state machine detects transitions and waits an extra sampling clock
-    before decoding the state on the differential pair.  this transition period 
+    before decoding the state on the differential pair.  this transition period
     will only ever last for one clock as long as there is no noise on the line.
     if there is enough noise on the line then the data may be corrupted and the
     packet will fail the data integrity checks.
@@ -80,7 +80,7 @@ module usb_fs_rx (
 
   always @(posedge clk) begin
       case (line_state)
-          // if we are in a transition state, then we can sample the pair and 
+          // if we are in a transition state, then we can sample the pair and
           // move to the next corresponding line state
           DT : begin
               case (dpair)
@@ -96,7 +96,7 @@ module usb_fs_rx (
           DJ  : if (dpair != 2'b10) line_state <= DT;
           DK  : if (dpair != 2'b01) line_state <= DT;
           SE0 : if (dpair != 2'b00) line_state <= DT;
-          SE1 : if (dpair != 2'b11) line_state <= DT;        
+          SE1 : if (dpair != 2'b11) line_state <= DT;
 
           // if we are in an invalid state we should move to the transition state
           default : line_state <= DT;
@@ -107,7 +107,7 @@ module usb_fs_rx (
   ////////////////////////////////////////////////////////////////////////////////
   // clock recovery
   /*
-    the DT state from the line state recovery state machine is used to align to 
+    the DT state from the line state recovery state machine is used to align to
     transmit clock.  the line state is sampled in the middle of the bit time.
 
     example of signal relationships
@@ -134,7 +134,7 @@ module usb_fs_rx (
 
 
   ////////////////////////////////////////////////////////////////////////////////
-  // packet detection 
+  // packet detection
   /*
     usb uses a sync to denote the beginning of a packet and two single-ended-0 to
     denote the end of a packet.  this state machine recognizes the beginning and
@@ -155,7 +155,7 @@ module usb_fs_rx (
         if (!packet_valid && line_history[5:0] == 6'b100101) begin
           next_packet_valid <= 1;
         end
- 
+
         // check for packet end: SE0 SE0
         else if (packet_valid && line_history[3:0] == 4'b0000) begin
           next_packet_valid <= 0;
@@ -202,7 +202,7 @@ module usb_fs_rx (
       4'b1010 : din <= 1;
       default : din <= 0;
     endcase
- 
+
     if (packet_valid && line_state_valid) begin
       case (line_history[3:0])
         4'b0101 : dvalid_raw <= 1;
@@ -225,7 +225,7 @@ module usb_fs_rx (
       if (dvalid_raw) begin
         bitstuff_history <= {bitstuff_history[4:0], din};
       end
-    end  
+    end
   end
 
   assign dvalid = dvalid_raw && !(bitstuff_history == 6'b111111);
@@ -276,7 +276,7 @@ module usb_fs_rx (
   // check crc16
   reg [15:0] crc16;
   wire crc16_valid = crc16 == 16'b1000000000001101;
-  wire crc16_invert = din ^ crc16[15];  
+  wire crc16_invert = din ^ crc16[15];
 
   always @(posedge clk) begin
     if (packet_start) begin
@@ -314,11 +314,11 @@ module usb_fs_rx (
   // TODO: need to check for data packet babble
   // TODO: do i need to check for bitstuff error?
   assign valid_packet = pid_valid && (
-    (pkt_is_handshake) || 
+    (pkt_is_handshake) ||
     (pkt_is_data && crc16_valid) ||
     (pkt_is_token && crc5_valid)
   );
-  
+
 
   reg [11:0] token_payload;
   wire token_payload_done = token_payload[0];
@@ -342,12 +342,12 @@ module usb_fs_rx (
   end
 
   assign pkt_start = packet_start;
-  assign pkt_end = packet_end; 
-  assign pid = full_pid[4:1]; 
+  assign pkt_end = packet_end;
+  assign pid = full_pid[4:1];
   //assign addr = token_payload[7:1];
   //assign endp = token_payload[11:8];
   //assign frame_num = token_payload[11:1];
-  
+
 
   ////////////////////////////////////////////////////////////////////////////////
   // deserialize and output data

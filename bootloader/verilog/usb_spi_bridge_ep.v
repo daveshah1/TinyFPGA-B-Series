@@ -4,7 +4,7 @@ module usb_spi_bridge_ep (
 
 
   ////////////////////
-  // out endpoint interface 
+  // out endpoint interface
   ////////////////////
   output out_ep_req,
   input out_ep_grant,
@@ -17,7 +17,7 @@ module usb_spi_bridge_ep (
 
 
   ////////////////////
-  // in endpoint interface 
+  // in endpoint interface
   ////////////////////
   output in_ep_req,
   input in_ep_grant,
@@ -30,14 +30,14 @@ module usb_spi_bridge_ep (
 
 
   ////////////////////
-  // spi interface 
+  // spi interface
   ////////////////////
   output reg spi_cs_b,
   output reg spi_sck,
   output spi_mosi,
   input spi_miso,
 
-  
+
   ////////////////////
   // warm boot interface
   ////////////////////
@@ -91,7 +91,7 @@ module usb_spi_bridge_ep (
   ////////////////////////////////////////////////////////////////////////////////
   reg [2:0] spi_state;
   reg [2:0] spi_state_next;
-  
+
   localparam SPI_IDLE = 0;
   localparam SPI_START = 1;
   localparam SPI_SEND_BIT_1 = 2;
@@ -112,8 +112,8 @@ module usb_spi_bridge_ep (
   // other glue logic
   ////////////////////////////////////////////////////////////////////////////////
   assign out_ep_req = out_ep_data_avail;
-  assign out_ep_data_get = (get_spi_out_data || get_cmd_out_data) && out_ep_grant; 
-  
+  assign out_ep_data_get = (get_spi_out_data || get_cmd_out_data) && out_ep_grant;
+
   assign in_ep_req = (spi_has_more_in_bytes || spi_put_last_in_byte) && in_ep_data_free;
   assign in_ep_data_put = put_spi_in_data;
   assign in_ep_data = spi_in_data[7:0];
@@ -123,7 +123,7 @@ module usb_spi_bridge_ep (
   wire spi_byte_done = spi_bit_counter == 7;
 
   reg out_data_ready;
-  always @(posedge clk) out_data_ready <= out_ep_grant && out_ep_data_avail; 
+  always @(posedge clk) out_data_ready <= out_ep_grant && out_ep_data_avail;
 
   reg spi_dir_transition;
   reg spi_put_last_in_byte;
@@ -158,14 +158,14 @@ module usb_spi_bridge_ep (
         if (out_data_ready && out_ep_data == 0) begin
           cmd_state_next <= CMD_OP_BOOT;
 
-        end else if (out_data_ready && out_ep_data == 1) begin  
-          //cmd_state_next <= CMD_OP_XFR;    
-          cmd_state_next <= CMD_SAVE_DOL_LO;    
-  
+        end else if (out_data_ready && out_ep_data == 1) begin
+          //cmd_state_next <= CMD_OP_XFR;
+          cmd_state_next <= CMD_SAVE_DOL_LO;
+
         end else if (out_data_ready && out_ep_data[7]) begin
           // out_ep_data[6] // output pin value
           // out_ep_data[5] // output pin enable
-          // out_ep_data[4:0] // output pin id 
+          // out_ep_data[4:0] // output pin id
 
           output_pin_values[out_ep_data[4:0]] <= out_ep_data[6];
           output_pin_enables[out_ep_data[4:0]] <= out_ep_data[5];
@@ -187,41 +187,41 @@ module usb_spi_bridge_ep (
       //end
 
       CMD_SAVE_DOL_LO : begin
-        if (out_data_ready) begin   
+        if (out_data_ready) begin
           get_cmd_out_data <= 1;
-          cmd_state_next <= CMD_SAVE_DOL_HI;     
-  
+          cmd_state_next <= CMD_SAVE_DOL_HI;
+
         end else begin
           cmd_state_next <= CMD_SAVE_DOL_LO;
         end
       end
 
       CMD_SAVE_DOL_HI : begin
-        if (out_data_ready) begin   
+        if (out_data_ready) begin
           get_cmd_out_data <= 1;
-          cmd_state_next <= CMD_SAVE_DIL_LO;     
-  
+          cmd_state_next <= CMD_SAVE_DIL_LO;
+
         end else begin
           cmd_state_next <= CMD_SAVE_DOL_HI;
         end
       end
 
       CMD_SAVE_DIL_LO : begin
-        if (out_data_ready) begin   
+        if (out_data_ready) begin
           get_cmd_out_data <= 1;
-          cmd_state_next <= CMD_SAVE_DIL_HI;     
-  
+          cmd_state_next <= CMD_SAVE_DIL_HI;
+
         end else begin
           cmd_state_next <= CMD_SAVE_DIL_LO;
         end
       end
 
       CMD_SAVE_DIL_HI : begin
-        if (out_data_ready) begin   
-          cmd_state_next <= CMD_DO_OUT; 
-          //get_cmd_out_data <= 1;    
+        if (out_data_ready) begin
+          cmd_state_next <= CMD_DO_OUT;
+          //get_cmd_out_data <= 1;
           spi_start_new_xfr <= 1;
-  
+
         end else begin
           cmd_state_next <= CMD_SAVE_DIL_HI;
         end
@@ -273,7 +273,7 @@ module usb_spi_bridge_ep (
 
   always @(posedge clk) begin
     cmd_state <= cmd_state_next;
-    
+
     if (get_cmd_out_data) begin
       case (cmd_state)
         CMD_SAVE_DOL_LO : data_out_length[7:0] <= out_ep_data;
@@ -324,7 +324,7 @@ module usb_spi_bridge_ep (
         if (spi_has_more_out_bytes) begin
           get_spi_out_data <= 1;
           spi_state_next <= SPI_SEND_BIT_1;
-          
+
         end else if (spi_has_more_in_bytes || spi_dir_transition) begin
           spi_state_next <= SPI_SEND_BIT_1;
 
@@ -400,7 +400,7 @@ module usb_spi_bridge_ep (
       default begin
         spi_state_next <= SPI_IDLE;
       end
-    endcase    
+    endcase
   end
 
   reg get_spi_out_data_q;
@@ -425,5 +425,5 @@ module usb_spi_bridge_ep (
     end else if (get_spi_out_data_q) begin
       spi_out_data <= out_ep_data;
     end
-  end 
+  end
 endmodule

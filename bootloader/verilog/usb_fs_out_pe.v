@@ -5,12 +5,12 @@ module usb_fs_out_pe #(
 ) (
   input clk,
   input reset,
-  input [NUM_OUT_EPS-1:0] reset_ep, 
+  input [NUM_OUT_EPS-1:0] reset_ep,
   input [6:0] dev_addr,
   input bit_strobe,
 
   ////////////////////
-  // endpoint interface 
+  // endpoint interface
   ////////////////////
   output [NUM_OUT_EPS-1:0] out_ep_data_avail,
   output reg [NUM_OUT_EPS-1:0] out_ep_setup,
@@ -21,7 +21,7 @@ module usb_fs_out_pe #(
 
 
   ////////////////////
-  // rx path 
+  // rx path
   ////////////////////
 
   // Strobed on reception of packet.
@@ -41,7 +41,7 @@ module usb_fs_out_pe #(
 
 
   ////////////////////
-  // tx path 
+  // tx path
   ////////////////////
 
   // Strobe to send new packet.
@@ -69,8 +69,8 @@ module usb_fs_out_pe #(
 
   localparam IDLE = 0;
   localparam RCVD_OUT = 1;
-  localparam RCVD_DATA_START = 2; 
-  localparam RCVD_DATA_END = 3; 
+  localparam RCVD_DATA_START = 2;
+  localparam RCVD_DATA_END = 3;
 
   reg out_xfr_start;
   reg new_pkt_end;
@@ -78,7 +78,7 @@ module usb_fs_out_pe #(
 
 
   reg [3:0] out_ep_num;
-  
+
 
   reg [NUM_OUT_EPS - 1:0] out_ep_data_avail_i;
   reg [NUM_OUT_EPS - 1:0] out_ep_data_avail_j;
@@ -106,7 +106,7 @@ module usb_fs_out_pe #(
   wire [8:0] buffer_put_addr = {current_endp[3:0], ep_put_addr[current_endp][4:0]};
   wire [8:0] buffer_get_addr = {out_ep_num[3:0], ep_get_addr[out_ep_num][4:0]};
 
-  wire token_received = 
+  wire token_received =
     rx_pkt_end &&
     rx_pkt_valid &&
     rx_pid[1:0] == 2'b01 &&
@@ -209,7 +209,7 @@ module usb_fs_out_pe #(
         end else begin
           ep_state[ep_num] <= ep_state_next[ep_num];
 
-          //out_ep_data_avail_i[ep_num] <= 0; 
+          //out_ep_data_avail_i[ep_num] <= 0;
           //out_ep_data_avail_j[ep_num] <= out_ep_data_avail_i[ep_num];
           //out_ep_data_avail[ep_num] <= out_ep_data_avail_j[ep_num] && out_ep_data_avail_i[ep_num];
 
@@ -219,14 +219,14 @@ module usb_fs_out_pe #(
             //end
 
             if (
-              out_ep_data_get[ep_num] 
+              out_ep_data_get[ep_num]
             ) begin
               ep_get_addr[ep_num][4:0] <= ep_get_addr[ep_num][4:0] + 1;
             end
           end
 
-        
-                  
+
+
           case (ep_state[ep_num])
             READY_FOR_PKT : begin
               ep_get_addr[ep_num][4:0] <= 0;
@@ -235,7 +235,7 @@ module usb_fs_out_pe #(
             PUTTING_PKT : begin
             end
 
-            GETTING_PKT : begin   
+            GETTING_PKT : begin
             end
 
             STALL : begin
@@ -243,10 +243,10 @@ module usb_fs_out_pe #(
           endcase
         end
       end
-      
 
-      assign out_ep_data_avail[ep_num] = 
-        (ep_get_addr[ep_num][4:0] < (ep_put_addr[ep_num][5:0] - 2)) && 
+
+      assign out_ep_data_avail[ep_num] =
+        (ep_get_addr[ep_num][4:0] < (ep_put_addr[ep_num][5:0] - 2)) &&
         (ep_state[ep_num][1:0] == GETTING_PKT);
 
     end
@@ -280,7 +280,7 @@ module usb_fs_out_pe #(
 
     for (ep_num_decoder = 0; ep_num_decoder < NUM_OUT_EPS; ep_num_decoder = ep_num_decoder + 1) begin
       if (out_ep_data_get[ep_num_decoder]) begin
-        out_ep_num <= ep_num_decoder; 
+        out_ep_num <= ep_num_decoder;
       end
     end
   end
@@ -382,8 +382,8 @@ module usb_fs_out_pe #(
 
         RCVD_OUT : begin
           ep_put_addr[current_endp][5:0] <= 0;
-          nak_out_transfer <= 
-            (ep_state[current_endp] == GETTING_PKT) || 
+          nak_out_transfer <=
+            (ep_state[current_endp] == GETTING_PKT) ||
             (ep_state[current_endp] == READY_FOR_PKT);
         end
 

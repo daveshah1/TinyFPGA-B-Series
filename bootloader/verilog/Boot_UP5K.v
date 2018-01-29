@@ -1,8 +1,8 @@
 module TinyFPGA_B (
   inout pin1_usb_dp,
   inout pin2_usb_dn,
-  input pin3_clk_16mhz,
-  inout pin4,
+  input pin3_clk_12mhz,
+  /*inout pin4,
   inout pin5,
   inout pin6,
   inout pin7,
@@ -11,18 +11,20 @@ module TinyFPGA_B (
   inout pin10,
   inout pin11,
   inout pin12,
-  inout pin13,
+  inout pin13,*/
   inout pin14_sdo,
-  inout pin15_sdi,
-  inout pin16_sck,
-  inout pin17_ss,
-  inout pin18,
+  inout pin17_sdi,
+  inout pin15_sck,
+  inout pin16_ss,
+  /*inout pin18,
   inout pin19,
   inout pin20,
   inout pin21,
   inout pin22,
   inout pin23,
-  inout pin24
+  inout pin24*/
+  output test,
+  output pu
 );
   wire clk_48mhz;
 
@@ -40,8 +42,8 @@ module TinyFPGA_B (
   ////////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////
 
-  SB_PLL40_CORE usb_pll_inst (
-    .REFERENCECLK(pin3_clk_16mhz),
+  SB_PLL40_PAD usb_pll_inst (
+    .PACKAGEPIN(pin3_clk_12mhz),
     .PLLOUTCORE(clk_48mhz),
     .PLLOUTGLOBAL(),
     .EXTFEEDBACK(),
@@ -55,9 +57,9 @@ module TinyFPGA_B (
     .SCLK()
   );
 
-  // Fin=16, Fout=48;
+  // Fin=12, Fout=48;
   defparam usb_pll_inst.DIVR = 4'b0000;
-  defparam usb_pll_inst.DIVF = 7'b0101111;
+  defparam usb_pll_inst.DIVF = 7'b0111111;
   defparam usb_pll_inst.DIVQ = 3'b100;
   defparam usb_pll_inst.FILTER_RANGE = 3'b001;
   defparam usb_pll_inst.FEEDBACK_PATH = "SIMPLE";
@@ -119,8 +121,8 @@ module TinyFPGA_B (
   wire sof_valid;
   wire [10:0] frame_index;
 
-  reg [31:0] host_presence_timer;
-  reg host_presence_timeout;
+  reg [31:0] host_presence_timer = 32'd0;
+  reg host_presence_timeout = 1'b0;
 
   wire boot_to_user_design;
 
@@ -129,11 +131,11 @@ module TinyFPGA_B (
 
   wire reset;
 
-  SB_WARMBOOT warmboot_inst (
+  /*SB_WARMBOOT warmboot_inst (
     .S1(0),
     .S0(1),
     .BOOT(host_presence_timeout || boot_to_user_design)
-  );
+  );*/
 
   usb_serial_ctrl_ep ctrl_ep_inst (
     .clk(clk_48mhz),
@@ -187,10 +189,10 @@ module TinyFPGA_B (
     .in_ep_acked(serial_in_ep_acked),
 
     // spi interface
-    .spi_cs_b(pin17_ss),
-    .spi_sck(pin16_sck),
+    .spi_cs_b(pin16_ss),
+    .spi_sck(pin15_sck),
     .spi_mosi(pin14_sdo),
-    .spi_miso(pin15_sdi),
+    .spi_miso(pin17_sdi),
 
     // warm boot interface
     .boot_to_user_design(boot_to_user_design),
@@ -255,11 +257,14 @@ module TinyFPGA_B (
       host_presence_timer <= host_presence_timer + 1;
     end
 
-    if (host_presence_timer > 48000000) begin
+    if (host_presence_timer > 960000000) begin
       host_presence_timeout <= 1;
     end
   end
 
+  assign test = host_presence_timer[15];
+  assign pu = 1'b1;
+/*
   assign pin4 =  output_pin_enables[4]  ? output_pin_values[4]  : 1'bz;
   assign pin5 =  output_pin_enables[5]  ? output_pin_values[5]  : 1'bz;
   assign pin6 =  output_pin_enables[6]  ? output_pin_values[6]  : 1'bz;
@@ -278,5 +283,5 @@ module TinyFPGA_B (
   assign pin22 = output_pin_enables[22] ? output_pin_values[22] : 1'bz;
   assign pin23 = output_pin_enables[23] ? output_pin_values[23] : 1'bz;
   assign pin24 = output_pin_enables[24] ? output_pin_values[24] : 1'bz;
-
+*/
 endmodule

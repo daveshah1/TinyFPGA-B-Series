@@ -45,7 +45,7 @@ module usb_fs_mux (
   localparam START = 0;
   localparam FORCE_DISC = 1;
   localparam CONNECTED = 2;
-  
+
   reg [15:0] se0_timer;
   reg ready;
   reg drive_fpga_init_se0;
@@ -65,8 +65,34 @@ module usb_fs_mux (
     end
   end
 
-  assign dp = drive_fpga_init_se0 ? 1'b0 : (oe ? dp_tx : 1'bz);
-  assign dn = drive_fpga_init_se0 ? 1'b0 : (oe ? dn_tx : 1'bz);
-  assign dp_rx = (oe || drive_fpga_init_se0) ? 1 : dp;
-  assign dn_rx = (oe || drive_fpga_init_se0) ? 0 : dn;
+  wire dp_raw_do, dn_raw_do;
+  wire dp_raw_di, dn_raw_di;
+
+  assign dp_raw_do = drive_fpga_init_se0 ? 1'b0 : (oe ? dp_tx : 1'b0);
+  assign dn_raw_do = drive_fpga_init_se0 ? 1'b0 : (oe ? dn_tx : 1'b0);
+  assign dp_rx = (oe || drive_fpga_init_se0) ? 1 : dp_raw_di;
+  assign dn_rx = (oe || drive_fpga_init_se0) ? 0 : dn_raw_di;
+
+
+  //(* PULLUP_STRENGTH = "3P3K" *)
+  SB_IO #(
+    .PIN_TYPE(6'b101001),
+    .PULLUP(1'b0)
+  ) dp_io (
+    .PACKAGE_PIN(dp),
+    .OUTPUT_ENABLE(oe),
+    .D_OUT_0(dp_raw_do),
+    .D_IN_0(dp_raw_di)
+  );
+
+  SB_IO #(
+    .PIN_TYPE(6'b101001),
+    .PULLUP(1'b0)
+  ) dn_io (
+    .PACKAGE_PIN(dn),
+    .OUTPUT_ENABLE(oe),
+    .D_OUT_0(dn_raw_do),
+    .D_IN_0(dn_raw_di)
+  );
+
 endmodule

@@ -4,7 +4,7 @@ module usb_serial_ctrl_ep (
   output [6:0] dev_addr,
 
   ////////////////////
-  // out endpoint interface 
+  // out endpoint interface
   ////////////////////
   output out_ep_req,
   input out_ep_grant,
@@ -17,7 +17,7 @@ module usb_serial_ctrl_ep (
 
 
   ////////////////////
-  // in endpoint interface 
+  // in endpoint interface
   ////////////////////
   output in_ep_req,
   input in_ep_grant,
@@ -28,7 +28,7 @@ module usb_serial_ctrl_ep (
   output in_ep_stall,
   input in_ep_acked
 );
-  
+
   reg [5:0] ctrl_xfr_state;
   reg [5:0] ctrl_xfr_state_next;
 
@@ -38,7 +38,7 @@ module usb_serial_ctrl_ep (
   localparam DATA_OUT = 3;
   localparam STATUS_IN = 4;
   localparam STATUS_OUT = 5;
- 
+
   reg setup_stage_end;
   reg data_stage_end;
   reg status_stage_end;
@@ -94,7 +94,7 @@ module usb_serial_ctrl_ep (
 
 
 
-  wire all_data_sent = 
+  wire all_data_sent =
     (bytes_sent > rom_length) ||
     (bytes_sent > wLength);
 
@@ -176,7 +176,7 @@ module usb_serial_ctrl_ep (
           ctrl_xfr_state_next <= STATUS_IN;
           send_zero_length_data_pkt <= 1;
           data_stage_end <= 1;
-          
+
         end else begin
           ctrl_xfr_state_next <= DATA_OUT;
         end
@@ -186,7 +186,7 @@ module usb_serial_ctrl_ep (
         if (in_ep_acked) begin
           ctrl_xfr_state_next <= IDLE;
           status_stage_end <= 1;
-          
+
         end else begin
           ctrl_xfr_state_next <= STATUS_IN;
         end
@@ -196,7 +196,7 @@ module usb_serial_ctrl_ep (
         if (out_ep_acked) begin
           ctrl_xfr_state_next <= IDLE;
           status_stage_end <= 1;
-          
+
         end else begin
           ctrl_xfr_state_next <= STATUS_OUT;
         end
@@ -222,18 +222,18 @@ module usb_serial_ctrl_ep (
       case (bRequest)
         'h06 : begin
           // GET_DESCRIPTOR
-          case (wValue[15:8]) 
+          case (wValue[15:8])
             1 : begin
               // DEVICE
-              rom_addr    <= 'h00; 
+              rom_addr    <= 'h00;
               rom_length  <= 'h12;
-            end 
+            end
 
             2 : begin
               // CONFIGURATION
-              rom_addr    <= 'h12; 
+              rom_addr    <= 'h12;
               rom_length  <= 'h43;
-            end 
+            end
             /*
             6 : begin
               // DEVICE_QUALIFIER
@@ -293,14 +293,14 @@ module usb_serial_ctrl_ep (
     end
 
     if (status_stage_end) begin
-      setup_data_addr <= 0;      
+      setup_data_addr <= 0;
       bytes_sent <= 0;
       rom_addr <= 0;
       rom_length <= 0;
 
       if (save_dev_addr) begin
         save_dev_addr <= 0;
-        dev_addr_i <= wValue[6:0]; 
+        dev_addr_i <= wValue[6:0];
       end else if (reset) begin
         dev_addr_i <= 0;
       end
@@ -308,7 +308,7 @@ module usb_serial_ctrl_ep (
   end
 
 
-  `define CDC_ACM_ENDPOINT 2 
+  `define CDC_ACM_ENDPOINT 2
   `define CDC_RX_ENDPOINT 1
   `define CDC_TX_ENDPOINT 1
 
@@ -337,14 +337,14 @@ module usb_serial_ctrl_ep (
       // configuration descriptor
       'h012 : in_ep_data <= 9; // bLength
       'h013 : in_ep_data <= 2; // bDescriptorType
-      'h014 : in_ep_data <= (9+9+5+5+4+5+7+9+7+7); // wTotalLength[0] 
+      'h014 : in_ep_data <= (9+9+5+5+4+5+7+9+7+7); // wTotalLength[0]
       'h015 : in_ep_data <= 0; // wTotalLength[1]
       'h016 : in_ep_data <= 2; // bNumInterfaces
       'h017 : in_ep_data <= 1; // bConfigurationValue
       'h018 : in_ep_data <= 0; // iConfiguration
       'h019 : in_ep_data <= 'hC0; // bmAttributes
       'h01A : in_ep_data <= 50; // bMaxPower
-      
+
       // interface descriptor, USB spec 9.6.5, page 267-269, Table 9-12
       'h01B : in_ep_data <= 9; // bLength
       'h01C : in_ep_data <= 4; // bDescriptorType
@@ -360,7 +360,7 @@ module usb_serial_ctrl_ep (
       'h024 : in_ep_data <= 5;					// bFunctionLength
 	    'h025 : in_ep_data <= 'h24;					// bDescriptorType
 	    'h026 : in_ep_data <= 'h00;					// bDescriptorSubtype
-	    'h027 : in_ep_data <= 'h10; 
+	    'h027 : in_ep_data <= 'h10;
       'h028 : in_ep_data <= 'h01;				// bcdCDC
 
 	    // Call Management Functional Descriptor, CDC Spec 5.2.3.2, Table 27
